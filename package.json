@@ -1,8 +1,8 @@
 {
-  "name": "straight-canvas",
+  "name": "canvas-polyline",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "dist/index.umd.js",
   "module": "src/index.js",
   "directories": {
     "test": "test"
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "adaptive-bezier-curve": "^1.0.3",
+    "adaptive-quadratic-curve": "^1.0.2",
     "transformation-matrix": "^1.14.0"
   }
 }

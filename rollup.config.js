@@ -4,7 +4,7 @@ import commonjs from 'rollup-plugin-commonjs';
 
 export default [{
   input: 'src/index.js',
-  external: ['adaptive-bezier-curve', 'transformation-matrix'],
+  external: ['adaptive-bezier-curve', 'adaptive-quadractive-curve', 'transformation-matrix'],
   plugins: [
     buble()
   ],
@@ -23,7 +23,7 @@ export default [{
   output:
   {
     file: 'dist/index.umd.js',
-    name: 'StraightLineCanvas',
+    name: 'CanvasPolyline',
     format: 'umd',
     sourcemap: true
   }
