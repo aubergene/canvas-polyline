@@ -1,6 +1,6 @@
 import bezier from 'adaptive-bezier-curve'
 import quadratic from 'adaptive-quadratic-curve'
-import { identity, rotate, scale, translate, fromObject, compose, applyToPoint, inverse } from 'transformation-matrix';
+import { identity, rotate, scale, translate, fromObject, toString, fromString, compose, applyToPoint, inverse } from 'transformation-matrix';
 
 const pi = Math.PI,
   tau = 2 * pi,
@@ -25,24 +25,28 @@ export default class CanvasPolyLine {
   }
   
   rotate(a, cx, cy) {
-    this._transforms.push(rotate(a, cx, cy))
-    this._matrix = compose(...this._transforms)
+    this._matrix = compose(this._matrix, rotate(a, cx, cy))
   }
   scale(sx, sy) {
-    this._transforms.push(scale(sx, sy))
-    this._matrix = compose(...this._transforms)
+    this._matrix = compose(this._matrix, scale(sx, sy))
   }
   translate(tx, ty) {
-    this._transforms.push(translate(tx, ty))
-    this._matrix = compose(...this._transforms)
+    this._matrix = compose(this._matrix, translate(tx, ty))
   }
   transform(a, b, c, d, e, f) {
-    this._transforms.push(fromObject({ a, b, c, d, e, f }))
-    this._matrix = compose(...this._transforms)
+    this._matrix = compose(this._matrix, fromObject({ a, b, c, d, e, f }))
   }
   resetTransform() {
-    this._transforms = []
+    this._transformStack = []
     this._matrix = identity()
+  }
+  save() {
+    this._transformStack.push(toString(this._matrix))
+  }  
+  restore() {
+    if (this._transformStack.length) {
+      this._matrix = fromString(this._transformStack.pop())
+    }
   }
 
   beginPath() {

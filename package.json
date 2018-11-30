@@ -12,7 +12,7 @@
     "pretest": "npm run build",
     "test": "mocha"
   },
-  "keywords": [],
+  "keywords": ["canvas", "polyline", "canvas straight lines"],
   "author": "",
   "license": "ISC",
   "dependencies": {
