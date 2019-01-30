@@ -1,6 +1,6 @@
 const assert = require('assert')
 const sinon = require('sinon')
-const CanvasPolyline = require('../dist/index.umd')
+const CanvasPolyline = require('../dist/canvas-polyline.umd')
 
 describe('CanvasPolyline', function () {
   const moveTo = sinon.spy()
