@@ -2,8 +2,8 @@
   "name": "canvas-polyline",
   "version": "1.1.1",
   "description": "",
-  "main": "dist/index.umd.js",
-  "module": "src/index.js",
+  "main": "dist/canvas-polyline.umd.js",
+  "module": "src/canvas-polyline.es.js",
   "directories": {
     "test": "test"
   },
