@@ -44,6 +44,13 @@ export default class CanvasPolyLine {
     this._curveScale = _;
   }
 
+  stroke() {
+    this.ctx.forEach(c => c.stroke());
+  }
+  strokeRect(x, y, width, height) {
+    this.rect(x, y, width, height);
+    this.ctx.forEach(c => c.stroke());
+  }
   rotate(a, cx, cy) {
     this._matrix = compose(
       this._matrix,
