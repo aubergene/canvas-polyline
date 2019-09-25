@@ -109,7 +109,9 @@ export default class CanvasPolyLine {
     this.ctx.forEach(c => c.lineTo(x, y));
   }
   closePath() {
-    if (this._x1 !== null) {
+    const startIsEnd = arraysEqual([this._x0, this._y0], [this._x1, this._y1]);
+
+    if (this._x1 !== null && startIsEnd) {
       const start = applyToPoint(inverse(this._matrix), [this._x0, this._y0]);
       this.lineTo(start[0], start[1]);
     }
@@ -125,8 +127,14 @@ export default class CanvasPolyLine {
     });
   }
   bezierCurveTo(x1, y1, x2, y2, x, y) {
+    const startIsEnd = arraysEqual([this._x0, this._y0], [this._x1, this._y1]);
+
+    const start = startIsEnd
+      ? applyToPoint(inverse(this._matrix), [this._x1, this._y1])
+      : [this._x0, this._y0];
+
     var points = bezier(
-      [this._x0, this._y0],
+      start,
       [x1, y1],
       [x2, y2],
       [(this._x0 = this._x1 = +x), (this._y0 = this._y1 = +y)],
@@ -141,8 +149,7 @@ export default class CanvasPolyLine {
   }
   arcTo(x1, y1, x2, y2, r) {
     (x1 = +x1), (y1 = +y1), (x2 = +x2), (y2 = +y2), (r = +r);
-    // var x0 = this._x1,
-    //   y0 = this._y1
+
     var [x0, y0] = applyToPoint(inverse(this._matrix), [this._x1, this._y1]);
 
     var x21 = x2 - x1,
@@ -268,4 +275,15 @@ export default class CanvasPolyLine {
     if (!this._.length) return "";
     return this._.map(d => d.join(" ")).join("\n");
   }
+}
+
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }

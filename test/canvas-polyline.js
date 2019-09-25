@@ -34,7 +34,7 @@ describe("CanvasPolyline", function() {
     ctx.lineTo(250, 150);
     ctx.closePath();
     assert.equal(moveTo.callCount, 1);
-    assert.equal(lineTo.callCount, 3);
+    assert.equal(lineTo.callCount, 2);
   });
 
   it("rect", function() {
