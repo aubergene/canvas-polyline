@@ -109,29 +109,27 @@ export default class CanvasPolyLine {
     this.ctx.forEach(c => c.lineTo(x, y));
   }
   closePath() {
-    const startIsEnd = arraysEqual([this._x0, this._y0], [this._x1, this._y1]);
-
-    if (this._x1 !== null && startIsEnd) {
+    if (this._x1 !== null) {
       const start = applyToPoint(inverse(this._matrix), [this._x0, this._y0]);
       this.lineTo(start[0], start[1]);
     }
   }
   quadraticCurveTo(x1, y1, x, y) {
-    const start = applyToPoint(inverse(this._matrix), [this._x0, this._y0]);
-    const point = applyToPoint(this._matrix, [x, y]);
+    const start = applyToPoint(inverse(this._matrix), [this._x1, this._y1]);
+    const end = applyToPoint(this._matrix, [x, y]);
     const points = quadratic(start, [x1, y1], [+x, +y], +this._curveScale);
-    this._x0 = this._x1 = point[0];
-    this._y0 = this._y1 = point[1];
+    this._x0 = this._x1 = end[0];
+    this._y0 = this._y1 = end[1];
     points.forEach(p => {
       this.lineTo(p[0], p[1]);
     });
   }
   bezierCurveTo(x1, y1, x2, y2, x, y) {
     const startIsEnd = arraysEqual([this._x0, this._y0], [this._x1, this._y1]);
-
     const start = startIsEnd
       ? applyToPoint(inverse(this._matrix), [this._x1, this._y1])
       : [this._x0, this._y0];
+    const end = applyToPoint(this._matrix, [x, y]);
 
     var points = bezier(
       start,
@@ -140,6 +138,8 @@ export default class CanvasPolyLine {
       [(this._x0 = this._x1 = +x), (this._y0 = this._y1 = +y)],
       +this._curveScale
     );
+    this._x0 = this._x1 = end[0];
+    this._y0 = this._y1 = end[1];
     points.forEach(p => {
       this.lineTo(p[0], p[1]);
     });

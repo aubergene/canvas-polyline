@@ -86,6 +86,7 @@
       ctx.arcTo(5, 100, 5, 20, 30);
       ctx.lineTo(5, 15);
       drawHeart(ctx, 50, 20, 50, 50);
+      drawDiamond(ctx, 80, 50, 30, 40);
 
       ctx.translate(0, 110);
       ctx.transform(1, 0.2, 0.2, 0.6, 0, 0);
@@ -99,6 +100,7 @@
       ctx.arcTo(5, 100, 5, 20, 30);
       ctx.lineTo(5, 15);
       drawHeart(ctx, 50, 20, 50, 50);
+      drawDiamond(ctx, 80, 50, 30, 40);
 
       canvasCtx.stroke();
       d3svg
@@ -147,6 +149,26 @@
         // top right curve
         context.bezierCurveTo(x + width / 2, y, x, y, x, y + topCurveHeight);
 
+        context.closePath();
+        context.restore();
+      }
+
+      function drawDiamond(context, x, y, width, height) {
+        context.save();
+        context.beginPath();
+        context.moveTo(x, y);
+
+        // top left edge
+        context.lineTo(x - width / 2, y + height / 2);
+
+        // bottom left edge
+        context.lineTo(x, y + height);
+
+        // bottom right edge
+        context.lineTo(x + width / 2, y + height / 2);
+
+        // closing the path automatically creates
+        // the top right edge
         context.closePath();
         context.restore();
       }
