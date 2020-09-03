@@ -10,14 +10,14 @@ import {
   fromString,
   compose,
   applyToPoint,
-  inverse
+  inverse,
 } from "transformation-matrix";
 
-const pi = Math.PI,
-  tau = 2 * pi,
-  epsilon = 1e-6,
-  defaultCurveScale = 2,
-  defaultArcScale = 2;
+const pi = Math.PI;
+const tau = 2 * pi;
+const epsilon = 1e-6;
+const defaultCurveScale = 2;
+const defaultArcScale = 3;
 
 export default class CanvasPolyLine {
   constructor(ctx) {
@@ -35,7 +35,7 @@ export default class CanvasPolyLine {
   }
   set strokeStyle(_) {
     this._strokeStyle = _;
-    this.ctx.forEach(c => (c.strokeStyle = _));
+    this.ctx.forEach((c) => (c.strokeStyle = _));
   }
   set arcScale(_) {
     this._arcScale = _;
@@ -45,35 +45,29 @@ export default class CanvasPolyLine {
   }
 
   stroke() {
-    this.ctx.forEach(c => c.stroke());
+    this.ctx.forEach((c) => {
+      try {
+        c.stroke();
+      } catch (err) {
+        // console.log(err);
+      }
+    });
   }
   strokeRect(x, y, width, height) {
     this.rect(x, y, width, height);
-    this.ctx.forEach(c => c.stroke());
+    this.ctx.forEach((c) => c.stroke());
   }
   rotate(a, cx, cy) {
-    this._matrix = compose(
-      this._matrix,
-      rotate(a, cx, cy)
-    );
+    this._matrix = compose(this._matrix, rotate(a, cx, cy));
   }
   scale(sx, sy) {
-    this._matrix = compose(
-      this._matrix,
-      scale(sx, sy)
-    );
+    this._matrix = compose(this._matrix, scale(sx, sy));
   }
   translate(tx, ty) {
-    this._matrix = compose(
-      this._matrix,
-      translate(tx, ty)
-    );
+    this._matrix = compose(this._matrix, translate(tx, ty));
   }
   transform(a, b, c, d, e, f) {
-    this._matrix = compose(
-      this._matrix,
-      fromObject({ a, b, c, d, e, f })
-    );
+    this._matrix = compose(this._matrix, fromObject({ a, b, c, d, e, f }));
   }
   resetTransform() {
     this._matrix = identity();
@@ -81,7 +75,7 @@ export default class CanvasPolyLine {
   save() {
     this._stack.push({
       _matrix: toString(this._matrix),
-      _strokeStyle: this._strokeStyle
+      _strokeStyle: this._strokeStyle,
     });
   }
   restore() {
@@ -97,57 +91,61 @@ export default class CanvasPolyLine {
     this._x1 = this._y1 = null; // end of current subpath
   }
   moveTo(x, y) {
+    // console.log("moveTo", x, y);
     [x, y] = applyToPoint(this._matrix, [x, y]);
     this._x0 = this._x1 = +x;
     this._y0 = this._y1 = +y;
-    this.ctx.forEach(c => c.moveTo(x, y));
+    this.ctx.forEach((c) => c.moveTo(x, y));
   }
   lineTo(x, y) {
+    // console.log("lineTo", x, y);
     [x, y] = applyToPoint(this._matrix, [x, y]);
     this._x1 = +x;
     this._y1 = +y;
-    this.ctx.forEach(c => c.lineTo(x, y));
+    this.ctx.forEach((c) => c.lineTo(x, y));
   }
   closePath() {
+    // console.log("closePath");
     if (this._x1 !== null) {
       const start = applyToPoint(inverse(this._matrix), [this._x0, this._y0]);
       this.lineTo(start[0], start[1]);
     }
   }
   quadraticCurveTo(x1, y1, x, y) {
+    // console.log("quadraticCurveTo", x1, y1, x, y);
     const start = applyToPoint(inverse(this._matrix), [this._x1, this._y1]);
     const end = applyToPoint(this._matrix, [x, y]);
     const points = quadratic(start, [x1, y1], [+x, +y], +this._curveScale);
-    this._x0 = this._x1 = end[0];
-    this._y0 = this._y1 = end[1];
-    points.forEach(p => {
+    this._x1 = end[0];
+    this._y1 = end[1];
+    points.forEach((p) => {
       this.lineTo(p[0], p[1]);
     });
   }
   bezierCurveTo(x1, y1, x2, y2, x, y) {
-    const startIsEnd = arraysEqual([this._x0, this._y0], [this._x1, this._y1]);
-    const start = startIsEnd
-      ? applyToPoint(inverse(this._matrix), [this._x1, this._y1])
-      : [this._x0, this._y0];
+    // console.log("bezierCurveTo", x1, y1, x2, y2, x, y);
+    const start = applyToPoint(inverse(this._matrix), [this._x1, this._y1]);
     const end = applyToPoint(this._matrix, [x, y]);
 
-    var points = bezier(
+    const points = bezier(
       start,
       [x1, y1],
       [x2, y2],
-      [(this._x0 = this._x1 = +x), (this._y0 = this._y1 = +y)],
+      [+x, +y],
       +this._curveScale
     );
-    this._x0 = this._x1 = end[0];
-    this._y0 = this._y1 = end[1];
-    points.forEach(p => {
+    this._x1 = end[0];
+    this._y1 = end[1];
+    points.forEach((p) => {
       this.lineTo(p[0], p[1]);
     });
   }
-  arc(x, y, r, a0, a1, ccw) {
+  arc(x, y, r, a0, a1, ccw = false) {
+    // console.log("arc", x, y, r, a0, a1, ccw);
     this.ellipse(x, y, r, r, 0, a0, a1, ccw);
   }
   arcTo(x1, y1, x2, y2, r) {
+    // console.log("arcTo", x1, y1, x2, y2, r);
     (x1 = +x1), (y1 = +y1), (x2 = +x2), (y2 = +y2), (r = +r);
 
     var [x0, y0] = applyToPoint(inverse(this._matrix), [this._x1, this._y1]);
@@ -216,10 +214,12 @@ export default class CanvasPolyLine {
       this.arc(x4 - basex, y4 - basey, r, startAngle, startAngle + a);
     }
   }
-  ellipse(x, y, rx, ry, rot, a0, a1, ccw) {
+
+  ellipse(x, y, rx, ry, rot, a0, a1, ccw = false) {
+    // console.log("ellipse", x, y, rx, ry, rot, a0, a1, ccw);
     const [_x1, _y1] = applyToPoint(inverse(this._matrix), [
       this._x1,
-      this._y1
+      this._y1,
     ]);
 
     if (a0 < 0) a0 = (a0 + tau) % tau;
@@ -229,8 +229,14 @@ export default class CanvasPolyLine {
 
     let a = ccw ? a0 - a1 : a1 - a0;
     if (a < 0) a = (a + tau) % tau;
-    const inc =
+
+    let inc =
       1 / Math.sqrt(maxR * this._arcScale - Math.pow(this._arcScale, 2));
+
+    if (isNaN(inc) || inc > 1 / 8) {
+      inc = 1 / 8;
+    }
+
     const n = Math.ceil(a / inc);
     const cw = ccw ? -1 : 1;
 
@@ -265,6 +271,7 @@ export default class CanvasPolyLine {
     }
   }
   rect(x, y, w, h) {
+    // console.log("rect", x, y, w, h);
     this.moveTo(x, y);
     this.lineTo(x + w, y);
     this.lineTo(x + w, y + h);
@@ -273,7 +280,7 @@ export default class CanvasPolyLine {
   }
   toString() {
     if (!this._.length) return "";
-    return this._.map(d => d.join(" ")).join("\n");
+    return this._.map((d) => d.join(" ")).join("\n");
   }
 }
 
