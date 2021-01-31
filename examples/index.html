@@ -1,82 +1,101 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>canvas-polyline browser test</title>
-    <style>
-      .wrapper {
-        display: grid;
-        grid-gap: 16px;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      }
 
-      .box {
-        padding: 16px;
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>canvas-polyline browser test</title>
+  <style>
+    .wrapper {
+      display: grid;
+      grid-gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
 
-      canvas,
-      svg {
-        background: #fff;
-      }
-    </style>
-  </head>
+    .box {
+      padding: 16px;
+    }
 
-  <body>
-    <h1>canvas-polyline browser test</h1>
+    canvas {
+      background: #fff;
+      box-shadow: 2px 2px 5px #ccc;
+    }
+  </style>
+</head>
 
-    <p>
-      To facilitate seeing any difference between HTML5 Canvas, D3-Path and
-      canvas-polyline
-    </p>
+<body>
+  <h1>canvas-polyline browser test</h1>
 
-    <div class="wrapper">
-      <div class="box">
-        <h2>Canvas</h2>
-        <canvas id="canvas"></canvas>
-      </div>
-      <div class="box">
-        <h2>D3-path</h2>
-        <svg id="d3-path-svg"></svg>
-      </div>
-      <div class="box">
-        <h2>canvas-polyline</h2>
-        <canvas id="canvas-polyline"></canvas>
-      </div>
+  <p>
+    To facilitate seeing any difference between HTML5 Canvas, D3-Path and
+    canvas-polyline
+  </p>
+
+  <div class="wrapper">
+    <div class="box">
+      <h2>canvas (plain JavaScript)</h2>
+      <canvas id="canvas-js"></canvas>
     </div>
+    <div class="box">
+      <h2>canvas-polyline</h2>
+      <canvas id="canvas-poly"></canvas>
+    </div>
+  </div>
 
-    <script src="../dist/canvas-polyline.umd.js"></script>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script>
-      const tau = Math.PI * 2;
+  <h2>HPGL</h2>
+  <textarea id="hpgl-out" cols="60" rows="12"></textarea>
 
-      const width = 600;
-      const height = 400;
-      const dpr = window.devicePixelRatio || 1;
+  <script src="../dist/canvas-polyline.min.js"></script>
+  <script>
+    const tau = Math.PI * 2;
 
-      var canvas = d3.select("#canvas");
-      canvas.attr("width", width * dpr);
-      canvas.attr("height", height * dpr);
-      canvas.style("width", width + "px");
-      canvas.style("height", height + "px");
-      var canvasCtx = canvas.node().getContext("2d");
-      canvasCtx.scale(dpr, dpr);
+    const width = 400;
+    const height = 400;
+    const dpr = window.devicePixelRatio || 1;
 
-      var d3svg = d3.select("#d3-path-svg");
-      d3svg.attr("width", width);
-      d3svg.attr("height", height);
-      var d3pathCtx = d3.path();
+    const canvasJS = document.getElementById("canvas-js");
+    const canvasPoly = document.getElementById("canvas-poly");
 
-      var canvasPoly = d3.select("#canvas-polyline");
-      canvasPoly.attr("width", width * dpr);
-      canvasPoly.attr("height", height * dpr);
-      canvasPoly.style("width", width + "px");
-      canvasPoly.style("height", height + "px");
-      var canvasPolyCtx = canvasPoly.node().getContext("2d");
-      canvasPolyCtx.scale(dpr, dpr);
+    const canvases = [canvasJS, canvasPoly];
 
-      var ctx = new CanvasPolyline([canvasCtx, d3pathCtx, canvasPolyCtx]);
+    canvases.forEach((canvas) => {
+      canvas.setAttribute("width", width * dpr);
+      canvas.setAttribute("height", height * dpr);
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+    });
 
+    const contexts = canvases.map((d) => d.getContext("2d"));
+
+    contexts.forEach((ctx) => {
+      ctx.scale(dpr, dpr);
+    });
+
+    render(contexts[0]);
+    contexts[0].stroke();
+
+    const ctxPoly = new CanvasPolyline();
+
+    console.log({ CanvasPolyline })
+
+    render(ctxPoly);
+    const lines = ctxPoly.polylines();
+    console.log(lines);
+    lines.forEach((line) => {
+      contexts[1].moveTo(line[0][0], line[0][1]);
+      line.slice(1).forEach((point) => {
+        contexts[1].lineTo(point[0], point[1]);
+      });
+    });
+    contexts[1].stroke();
+
+    document.getElementById("hpgl-out")
+      .textContent = CanvasPolyline.toHPGL(lines).join(";\n")
+
+    function render(ctx) {
+      ctx.rect(0, 0, 100, 10);
+
+      return
       ctx.rect(5, 5, 100, 10);
       ctx.moveTo(160, 30);
       ctx.arc(140, 30, 20, 0, tau);
@@ -101,77 +120,71 @@
       ctx.lineTo(5, 15);
       drawHeart(ctx, 50, 20, 50, 50);
       drawDiamond(ctx, 80, 50, 30, 40);
+    }
 
-      canvasCtx.stroke();
-      d3svg
-        .append("path")
-        .attr("fill", "none")
-        .attr("stroke", "#000")
-        .attr("d", d3pathCtx.toString());
-      canvasPolyCtx.stroke();
+    function drawHeart(ctx, x, y, width, height) {
+      console.log("drawHeart", x, y, width, height);
+      ctx.save();
+      // ctx.beginPath();
+      var topCurveHeight = height * 0.3;
+      ctx.moveTo(x, y + topCurveHeight);
+      // top left curve
+      ctx.bezierCurveTo(
+        x,
+        y,
+        x - width / 2,
+        y,
+        x - width / 2,
+        y + topCurveHeight
+      );
 
-      function drawHeart(context, x, y, width, height) {
-        console.log("drawHeart", x, y, width, height);
-        context.save();
-        context.beginPath();
-        var topCurveHeight = height * 0.3;
-        context.moveTo(x, y + topCurveHeight);
-        // top left curve
-        context.bezierCurveTo(
-          x,
-          y,
-          x - width / 2,
-          y,
-          x - width / 2,
-          y + topCurveHeight
-        );
+      // bottom left curve
+      ctx.bezierCurveTo(
+        x - width / 2,
+        y + (height + topCurveHeight) / 2,
+        x,
+        y + (height + topCurveHeight) / 2,
+        x,
+        y + height
+      );
 
-        // bottom left curve
-        context.bezierCurveTo(
-          x - width / 2,
-          y + (height + topCurveHeight) / 2,
-          x,
-          y + (height + topCurveHeight) / 2,
-          x,
-          y + height
-        );
+      // bottom right curve
+      ctx.bezierCurveTo(
+        x,
+        y + (height + topCurveHeight) / 2,
+        x + width / 2,
+        y + (height + topCurveHeight) / 2,
+        x + width / 2,
+        y + topCurveHeight
+      );
 
-        // bottom right curve
-        context.bezierCurveTo(
-          x,
-          y + (height + topCurveHeight) / 2,
-          x + width / 2,
-          y + (height + topCurveHeight) / 2,
-          x + width / 2,
-          y + topCurveHeight
-        );
+      // top right curve
+      ctx.bezierCurveTo(x + width / 2, y, x, y, x, y + topCurveHeight);
 
-        // top right curve
-        context.bezierCurveTo(x + width / 2, y, x, y, x, y + topCurveHeight);
+      ctx.closePath();
+      ctx.restore();
+    }
 
-        context.closePath();
-        context.restore();
-      }
+    function drawDiamond(ctx, x, y, width, height) {
+      ctx.save();
+      // ctx.beginPath();
+      ctx.moveTo(x, y);
 
-      function drawDiamond(context, x, y, width, height) {
-        context.save();
-        context.beginPath();
-        context.moveTo(x, y);
+      // top left edge
+      ctx.lineTo(x - width / 2, y + height / 2);
 
-        // top left edge
-        context.lineTo(x - width / 2, y + height / 2);
+      // bottom left edge
+      ctx.lineTo(x, y + height);
 
-        // bottom left edge
-        context.lineTo(x, y + height);
+      // bottom right edge
+      ctx.lineTo(x + width / 2, y + height / 2);
 
-        // bottom right edge
-        context.lineTo(x + width / 2, y + height / 2);
+      // closing the path automatically creates
+      // the top right edge
+      ctx.closePath();
+      ctx.restore();
+    }
+  </script>
+</body>
 
-        // closing the path automatically creates
-        // the top right edge
-        context.closePath();
-        context.restore();
-      }
-    </script>
-  </body>
 </html>

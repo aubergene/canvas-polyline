@@ -6,35 +6,21 @@ import { terser } from "rollup-plugin-terser";
 export default [
   {
     input: "src/index.js",
-    external: [
-      "adaptive-bezier-curve",
-      "adaptive-quadractive-curve",
-      "transformation-matrix",
+    plugins: [
+      buble(),
+      resolve(),
+      commonjs(),
+      // terser({
+      //   compress: {
+      //     drop_console: true,
+      //   },
+      // }),
     ],
-    plugins: [buble()],
     output: {
-      file: "dist/canvas-polyline.es.js",
-      format: "es",
-      sourcemap: true,
-    },
-  },
-  {
-    input: "src/index.js",
-    plugins: [buble(), resolve(), commonjs()],
-    output: {
-      file: "dist/canvas-polyline.umd.js",
+      file: "dist/canvas-polyline.min.js",
       name: "CanvasPolyline",
       format: "umd",
       sourcemap: true,
-    },
-  },
-  {
-    input: "src/index.js",
-    plugins: [buble(), resolve(), commonjs(), terser()],
-    output: {
-      file: "dist/canvas-polyline.umd.min.js",
-      name: "CanvasPolyline",
-      format: "umd",
     },
   },
 ];
